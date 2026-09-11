@@ -1,0 +1,26 @@
+{
+  "name": "Dachshund Feliz",
+  "short_name": "Dachshund Feliz",
+  "description": "Más que una guía. Tu compañero para cuidar, entender y disfrutar a tu salchi.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#FDFAF3",
+  "theme_color": "#1B2A44",
+  "orientation": "portrait-primary",
+  "lang": "es-AR",
+  "icons": [
+    {
+      "src": "./icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
