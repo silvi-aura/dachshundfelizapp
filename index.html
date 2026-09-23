@@ -224,6 +224,16 @@ li{margin-bottom:.35em}
 .btn-sm{padding:9px 15px;font-size:.82rem}
 .btn-block{display:flex;width:100%}
 .btn:disabled{opacity:.45;pointer-events:none}
+/* ---------- dudas adicionales ---------- */
+.dudas-box{background:var(--ivory);border:1.5px solid var(--gold-pale);border-radius:18px;padding:14px}
+.dudas-box textarea{min-height:92px;resize:vertical}
+.dudas-go{display:grid;grid-template-columns:1fr;gap:9px;margin-top:12px}
+@media (min-width:520px){.dudas-go{grid-template-columns:1fr 1fr 1fr}}
+.dudas-go .btn{padding:12px 14px;font-size:.86rem}
+.dudas-hist{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:11px 12px;border-bottom:1px solid var(--line);font-size:.88rem;color:var(--ink)}
+.dudas-hist:last-child{border-bottom:0}
+.dudas-hist .grow{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dudas-entry{display:flex;align-items:center;gap:12px;margin-top:18px;border-color:var(--gold-pale)}
 
 /* ---------- chips ---------- */
 .chips{display:flex;flex-wrap:wrap;gap:7px}
@@ -526,6 +536,7 @@ var S = load() || {
 };
 if(!S.favs) S.favs = [];
 if(!S.read) S.read = [];
+if(!S.dudas) S.dudas = [];
 
 function newDog(d){
   return {
@@ -1860,6 +1871,15 @@ function relacionado(key){
     }).join('')+'</div>';
 }
 
+function dudasCTA(){
+  return '<button class="card tappable dudas-entry" data-go="dudas">'+
+    '<span style="font-size:1.3rem">🔎</span>'+
+    '<span class="grow"><span style="display:block;font-family:Lora,serif;font-weight:600;color:var(--navy);font-size:.94rem">Preguntas o dudas adicionales</span>'+
+    '<span class="tiny dim">¿Algo que no está en la guía? Buscalo en internet desde acá</span></span>'+
+    '<svg class="cv" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:16px;height:16px;stroke-width:2.2;color:var(--ink-3)">'+I.chev+'</svg>'+
+  '</button>';
+}
+
 function helpCTA(){
   return '<button class="card tappable card-flat" data-go="raro" style="margin-top:18px;display:flex;align-items:center;gap:12px">'+
     '<span style="font-size:1.3rem">🧭</span>'+
@@ -2124,7 +2144,8 @@ function tabInicio(){
         '<svg class="cv" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:16px;height:16px;stroke-width:2.2;color:var(--ink-3)">'+I.chev+'</svg>'+
       '</button>' : '')+
 
-    helpCTA();
+    helpCTA()+
+    dudasCTA();
 
   return {title:'Dachshund Feliz', html:html, actions:'', after:function(){
     $$('[data-plan]').forEach(function(b){
@@ -2295,6 +2316,7 @@ function tabSoluciones(){
         '</button>';
       }).join('')+
     '</div>'+
+    dudasCTA()+
     '<div style="margin-top:18px">'+vetNote(VET_STD)+'</div>';
   return {title:'Soluciones', html:html};
 }
@@ -4387,6 +4409,99 @@ function viewSanidad(){
 }
 
 /* ============================================================
+   PREGUNTAS O DUDAS ADICIONALES (se responden con internet)
+   ============================================================ */
+var DUDAS_EJ = [
+  '¿Puede comer mandarina?',
+  '¿Cada cuánto le corto las uñas?',
+  '¿Es normal que ronque?',
+  '¿Qué hacer si come chocolate?',
+  '¿Puede viajar en avión en cabina?'
+];
+
+function dudasContexto(){
+  var d = dog(); if(!d) return 'Tengo un perro salchicha (dachshund).';
+  var t = 'Tengo un perro salchicha (dachshund)';
+  if(d.etapa) t += ', etapa: '+stageLabel(d.etapa).toLowerCase();
+  var a = ageText(d); if(a && a!=='—') t += ', edad: '+a;
+  var w = lastWeight(d); if(w) t += ', peso: '+w+' kg';
+  if(d.pelo) t += ', pelo '+d.pelo;
+  return t+'.';
+}
+
+function dudasURL(kind, q){
+  var e = encodeURIComponent;
+  if(kind==='google'){
+    var base = /salchi|dachshund|teckel/i.test(q) ? q : 'perro salchicha dachshund '+q;
+    return 'https://www.google.com/search?hl=es&q='+e(base);
+  }
+  var prompt = dudasContexto()+' Mi pregunta: '+q+
+    ' Respondeme en español, de forma simple y práctica, con información actualizada y fuentes confiables. Si es un tema de salud, decime también cuándo conviene ir al veterinario.';
+  if(kind==='perplexity') return 'https://www.perplexity.ai/search?q='+e(prompt);
+  return 'https://chatgpt.com/?q='+e(prompt);
+}
+
+function viewDudas(){
+  var hist = (S.dudas||[]).slice(0,8);
+  var html =
+    '<div class="hero" style="margin-bottom:18px">'+
+      '<h1 style="font-size:1.4rem">Preguntas o dudas adicionales</h1>'+
+      '<p style="margin:10px 0 0;font-size:.9rem;color:rgba(253,250,243,.85);line-height:1.6">¿Te surgió algo que no está en la guía? Escribilo como se lo preguntarías a alguien y te llevamos directo a la respuesta en internet.</p>'+
+    '</div>'+
+
+    '<div class="dudas-box">'+
+      '<label class="field" style="margin:0"><span>Tu pregunta</span>'+
+        '<textarea class="input" id="dq" maxlength="400" placeholder="Ej: ¿puede comer sandía?"></textarea></label>'+
+      '<div class="chips" style="margin-top:10px">'+
+        DUDAS_EJ.map(function(x){ return '<button class="chip" data-dej="'+esc(x)+'">'+esc(x)+'</button>'; }).join('')+
+      '</div>'+
+      '<div class="dudas-go">'+
+        '<button class="btn" data-dk="perplexity">🔎 Respuesta con fuentes</button>'+
+        '<button class="btn btn-gold" data-dk="chatgpt">💬 Preguntarle a una IA</button>'+
+        '<button class="btn btn-ghost" data-dk="google">🌐 Buscar en Google</button>'+
+      '</div>'+
+      '<p class="tiny dim" style="margin:10px 0 0">Se abre en el navegador. A la IA le mandamos la etapa, edad y peso de '+esc((dog()||{}).nombre||'tu salchi')+' para que la respuesta sea más precisa.</p>'+
+    '</div>'+
+
+    (hist.length ?
+      sectTitle('Tus últimas dudas')+
+      '<div class="card" style="padding:4px 6px">'+
+        hist.map(function(h,i){
+          return '<button class="dudas-hist" data-dh="'+i+'"><span>🕘</span><span class="grow">'+esc(h.q)+'</span>'+
+            '<span class="tiny dim" style="flex:none">'+fmtDate(h.f)+'</span></button>';
+        }).join('')+
+      '</div>'+
+      '<button class="btn btn-ghost btn-sm" id="dclr" style="margin-top:10px">Borrar historial</button>'
+    : '')+
+
+    '<div style="margin-top:18px">'+vetNote('Las respuestas vienen de internet, no de la guía, y no siempre son correctas. Ante un síntoma, un golpe o algo que ingirió, no esperes: llamá al veterinario o mirá el <b>Protocolo de emergencia</b>.')+'</div>'+
+    '<button class="btn btn-block" data-go="emergencia" style="margin-top:12px;background:var(--brick)">Protocolo de emergencia</button>';
+
+  return {title:'Dudas adicionales', html:html, after:function(){
+    var ta = $('#dq');
+    $$('[data-dej]').forEach(function(b){
+      b.addEventListener('click', function(){ ta.value = b.dataset.dej; ta.focus(); });
+    });
+    $$('[data-dh]').forEach(function(b){
+      b.addEventListener('click', function(){ ta.value = hist[+b.dataset.dh].q; ta.focus(); window.scrollTo({top:0,behavior:'smooth'}); });
+    });
+    $$('[data-dk]').forEach(function(b){
+      b.addEventListener('click', function(){
+        var q = (ta.value||'').trim();
+        if(q.length<3){ toast('Escribí tu pregunta primero'); ta.focus(); return; }
+        window.open(dudasURL(b.dataset.dk, q), '_blank', 'noopener');
+        S.dudas = (S.dudas||[]).filter(function(h){ return h.q.toLowerCase()!==q.toLowerCase(); });
+        S.dudas.unshift({q:q, f:today()});
+        S.dudas = S.dudas.slice(0,20);
+        save();
+      });
+    });
+    var c = $('#dclr');
+    if(c) c.addEventListener('click', function(){ S.dudas = []; save(); render(); toast('Historial borrado'); });
+  }};
+}
+
+/* ============================================================
    DISPATCHER
    ============================================================ */
 function renderTab(tab){
@@ -4426,6 +4541,7 @@ function renderView(view, arg){
     case 'lector':        return viewLector(arg);
     case 'biblioteca':    return viewBiblioteca();
     case 'datos':         return viewDatos();
+    case 'dudas':         return viewDudas();
     default:              return tabInicio();
   }
 }
